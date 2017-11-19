@@ -12,4 +12,3 @@ import:
   - plugin/pkg/client/auth
   - tools/clientcmd
   - tools/clientcmd/api
-- package: github.com/mattn/go-tty
