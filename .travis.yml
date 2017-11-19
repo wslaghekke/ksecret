@@ -1,3 +1,27 @@
 language: go
-go:
-  - tip
+sudo: false
+matrix:
+  include:
+  - go: 1.x
+    env: LATEST=true
+  - go: tip
+  allow_failures:
+  - go: tip
+before_install:
+- go get github.com/mitchellh/gox
+script:
+- glide install
+- if [ "${LATEST}" = "true" ]; then gox -os="linux darwin windows" -arch="amd64" -output="ksecret.{{.OS}}.{{.Arch}}" -ldflags "-X cmd.Rev=`git rev-parse --short HEAD`" -verbose ./...; fi
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: Ta4vF6+JEiraCU3zlyYv086nxzShjlisXdCS1wyKOY6XTCmITBr6JzjWaB4Xux6+UyqiUYYoBQSHMLKm5bmR2MvFb2xKQ8yJU2qRaNoRsUZ/w5bZkR92/TnB1aWjNKX9enuaJC6+e7+o3kDOQOjX+OePcyc0zAUMEPnfsHWwTSyWIkVTPpon0zkYZpTG2pGAE/R6kucD2pq9Tg2qw15DW5wqHX/qg69B7cdp46dNvaExajLKOHNe8EKWdE6WCrVHH7u2jxhrlkpSk0wJH62TuqlDV0fOWPdiGNz/x/IhqZydxBrxLuvI3uPwDJvnHLGrEoKChHg6MaUyja69vk+Ludk+Ss6AtZLwbrJEzvmNfMY0h3buEkNt8Kvl0lo/YHnT+OCRzLDpwCUZuVshCTAv64vHuNnHx9YA+CA6Q+Ng34kusvOB2vxnPpTedEUN2UtnUoCQC2So0nBeSoWPIQJffu8spRlhybFDkUPBb1bYWDKUONmRMZMOaXGhIWgECr9kiDR3cbgk1sotrsuJDSqg7f2VjOFDvKjOdPHDX50gKuAq+fN55NHCB1W88qH5+ZAqMGUI6jkWfjDTAORCH2pZsSyVJaqbgqW97aQD9K0d/hjLqA4ygMcMty5CRNIn/Dvb1EY/4uJhYrVu3ZoxrofMz+skU9GPg+7YxhRO3ORsQ/A=
+  file:
+    - ksecret-windows-amd64.exe
+    - ksecret-darwin-amd64
+    - ksecret-linux-amd64
+  on:
+    repo: wslaghekke/ksecret
+    tags: true
+    condition: $LATEST = true
