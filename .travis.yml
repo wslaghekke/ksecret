@@ -7,11 +7,17 @@ matrix:
   - go: tip
   allow_failures:
   - go: tip
+
 before_install:
 - go get github.com/mitchellh/gox
-script:
+- curl https://glide.sh/get | sh
+
+install:
 - glide install
+
+script:
 - if [ "${LATEST}" = "true" ]; then gox -os="linux darwin windows" -arch="amd64" -output="ksecret.{{.OS}}.{{.Arch}}" -ldflags "-X cmd.Rev=`git rev-parse --short HEAD`" -verbose ./...; fi
+
 deploy:
   provider: releases
   skip_cleanup: true
