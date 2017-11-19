@@ -16,7 +16,7 @@ install:
 - glide install
 
 script:
-- if [ "${LATEST}" = "true" ]; then gox -os="linux darwin windows" -arch="amd64" -output="ksecret-{{.OS}}-{{.Arch}}" -ldflags "-s -w -X cmd.Rev=`git rev-parse --short HEAD`" -verbose ./...; fi
+- if [ "${LATEST}" = "true" ]; then gox -os="linux darwin windows" -arch="amd64" -output="ksecret-{{.OS}}-{{.Arch}}" -ldflags "-s -w -X github.com/wslaghekke/ksecret/cmd.Rev=`git rev-parse --short HEAD`" -verbose ./...; fi
 
 deploy:
   provider: releases
