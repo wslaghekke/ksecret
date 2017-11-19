@@ -1,0 +1,15 @@
+package: github.com/wslaghekke/ksecret
+import:
+- package: github.com/spf13/cobra
+  version: master
+- package: k8s.io/apimachinery
+  subpackages:
+  - pkg/apis/meta/v1
+- package: k8s.io/client-go
+  version: ^5.0.1
+  subpackages:
+  - kubernetes
+  - plugin/pkg/client/auth
+  - tools/clientcmd
+  - tools/clientcmd/api
+- package: github.com/mattn/go-tty
