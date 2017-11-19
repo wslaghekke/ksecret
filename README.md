@@ -1,0 +1,2 @@
+# ksecret
+Kubernetes secret editor
