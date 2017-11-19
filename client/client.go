@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"k8s.io/api/core/v1"
+	"path"
 )
 
 type secretData struct {
@@ -59,22 +60,59 @@ func CreateClient(kubeconfig string, namespace string) (*kubernetes.Clientset, *
 
 	return clientset, &namespace, nil
 }
+func ListSecrets(clientset *kubernetes.Clientset, namespace *string) {
+	secrets, err := clientset.CoreV1().Secrets(*namespace).List(metav1.ListOptions{})
+	checkErr(err)
+	for _, secret := range secrets.Items {
+		fmt.Println(secret.Name)
+	}
+}
+func ListSecretKeys(clientset *kubernetes.Clientset, namespace *string, secretName string) {
+	secret, err := clientset.CoreV1().Secrets(*namespace).Get(secretName, metav1.GetOptions{})
+	checkErr(err)
+	for key := range secret.Data {
+		fmt.Println(key)
+	}
+}
 func EditSecret(clientset *kubernetes.Clientset, namespace *string, secretName string) {
-	// Examples for error handling:
-	// - Use helper functions like e.g. errors.IsNotFound()
-	// - And/or cast to StatusError and use its properties like e.g. ErrStatus.Message
 	secret, err := clientset.CoreV1().Secrets(*namespace).Get(secretName, metav1.GetOptions{})
 	checkErr(err)
 
-	bytes, err := secretDataToYaml(secret)
+	inBytes, err := secretDataToYaml(secret)
 	checkErr(err)
 
-	tempFile, err := ioutil.TempFile("", "")
+	outBytes, err := editInEditor(inBytes, secretName)
 	checkErr(err)
 
-	tempFile.Write(bytes)
-	tempFile.Close()
-	tempFileName := tempFile.Name()
+	checkErr(yamlToSecretData(secret, outBytes))
+
+	clientset.CoreV1().Secrets(*namespace).Update(secret)
+}
+
+func EditSecretKey(clientset *kubernetes.Clientset, namespace *string, secretName string, secretKey string) {
+	secret, err := clientset.CoreV1().Secrets(*namespace).Get(secretName, metav1.GetOptions{})
+	checkErr(err)
+
+	inBytes := secret.Data[secretKey]
+
+	outBytes, err := editInEditor(inBytes, secretKey)
+	checkErr(err)
+
+	secret.Data[secretKey] = outBytes
+
+	clientset.CoreV1().Secrets(*namespace).Update(secret)
+}
+
+func editInEditor(in []byte, name string) (out []byte, err error)  {
+	tempDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		return nil, err
+	}
+
+	tempFileName := path.Join(tempDir, name)
+	if err := ioutil.WriteFile(tempFileName, in, 664); err != nil {
+		return nil, err
+	}
 
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
@@ -86,26 +124,20 @@ func EditSecret(clientset *kubernetes.Clientset, namespace *string, secretName s
 	editorCmd.Stdout = os.Stdout
 	editorCmd.Stderr = os.Stderr
 
-	checkErr(editorCmd.Run())
+	if err := editorCmd.Run(); err != nil {
+		return nil, err
+	}
 
 	readBytes, err := ioutil.ReadFile(tempFileName)
-	checkErr(err)
-
-	checkErr(yamlToSecretData(secret, readBytes))
-
-	checkErr(os.Remove(tempFileName))
-
-	clientset.CoreV1().Secrets(*namespace).Update(secret)
-}
-
-func ListSecrets(clientset *kubernetes.Clientset, namespace *string) {
-	secrets, err := clientset.CoreV1().Secrets(*namespace).List(metav1.ListOptions{})
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
-	for _, secret := range secrets.Items {
-		fmt.Println(secret.Name)
+
+	if os.Remove(tempFileName) != nil {
+		return nil, err
 	}
+
+	return readBytes, nil
 }
 
 func homeDir() string {
