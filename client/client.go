@@ -110,7 +110,7 @@ func editInEditor(in []byte, name string) (out []byte, err error)  {
 	}
 
 	tempFileName := path.Join(tempDir, name)
-	if err := ioutil.WriteFile(tempFileName, in, 664); err != nil {
+	if err := ioutil.WriteFile(tempFileName, in, 0664); err != nil {
 		return nil, err
 	}
 
