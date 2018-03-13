@@ -1,4 +1,4 @@
-# ksecret [![Build Status](https://travis-ci.org/wslaghekke/ksecret.svg)](https://travis-ci.org/wslaghekke/ksecret)
+# ksecret [![Build Status](https://travis-ci.org/wslaghekke/ksecret.svg?branch=master)](https://travis-ci.org/wslaghekke/ksecret)
 Kubernetes secret editor
 
 ## Commands
