@@ -169,8 +169,20 @@ func yamlToSecretData(secret *v1.Secret, bytes []byte) error {
 		return err
 	}
 
+	keysDeleted := make(map[string]bool)
+	for secretKey, _ := range secret.Data {
+		keysDeleted[secretKey] = true
+	}
+
 	for key, value := range data {
 		secret.Data[key] = []byte(value)
+		keysDeleted[key] = false
+	}
+
+	for key, deleted := range keysDeleted {
+		if deleted {
+			delete(secret.Data, key)
+		}
 	}
 
 	return nil
