@@ -175,7 +175,7 @@ func yamlToSecretData(secret *v1.Secret, bytes []byte) error {
 	}
 
 	if secret.Data == nil {
-		secret.Data = make(map[string]string)
+		secret.Data =  map[string]string{}
         }
 	
 	for key, value := range data {
